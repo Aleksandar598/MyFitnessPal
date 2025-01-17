@@ -19,3 +19,5 @@ void activityLevelInput(std::string& input, bool& exit, double* userDataDouble[]
 void genderInput(std::string& input, bool& exit, bool* userDataBool[], unsigned int& iter, bool& fail, bool& retFlag);
 
 void premiumInput(std::string& input, bool& exit, bool* userDataBool[], unsigned int iter, bool& fail, bool& retFlag);
+
+void calculateMacronutriens(const unsigned int goal, int& carbohydrates, const int recommendedCalorieIntake, int& fat, int& protein, int& carbohydratesGrams, int& proteinGrams, int& fatGrams);

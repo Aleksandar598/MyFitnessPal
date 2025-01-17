@@ -36,6 +36,21 @@ const unsigned SLOW_SPEEDTOWEIGHT = 1;
 const unsigned MEDIUM_SPEEDTOWEIGHT = 2;
 const unsigned HIGH_SPEEDTOWEIGHT = 3;
 const unsigned VERY_HIGH_SPEEDTOWEIGHT = 4;
+const double SPEED_TO_WEIGHT_COEF = 0.25;
+const int CALORIES_PER_KILO = 1100;
+const double LOSE_WEIGHT_PROTEIN = 0.35;
+const double KEEP_WEIGHT_PROTEIN = 0.25;
+const double GAIN_WEIGHT_PROTEIN = 0.40;
+const double LOSE_WEIGHT_FAT = 0.30;
+const double KEEP_WEIGHT_FAT = 0.30;
+const double GAIN_WEIGHT_FAT = 0.25;
+const double LOSE_WEIGHT_CARBOHYDRATES = 0.35;
+const double KEEP_WEIGHT_CARBOHYDRATES = 0.45;
+const double GAIN_WEIGHT_CARBOHYDRATES = 0.35;
+const int PROTEIN_CALORIES_PER_GRAM = 4;
+const int FAT_CALORIES_PER_GRAM = 9;
+const int CARBOHYDRATES_CALORIES_PER_GRAM = 4;
+
 std::string currentDate() {
 	std::time_t currentTime = std::time(nullptr);
 	std::tm localTime;
@@ -70,7 +85,7 @@ bool cinFailCheck() {
 	}
 	return false;
 }
-double dailyCaloriesFileReading(const std::string name, double& dailyCalories, bool& fail) {
+void dailyCaloriesFileReading(const std::string name, double& dailyCalories, bool& fail) {
 	std::string read;
 	std::string dateToday = currentDate();
 	bool found = false;
@@ -94,7 +109,7 @@ double dailyCaloriesFileReading(const std::string name, double& dailyCalories, b
 	}
 	return 0;
 }
-void dateFileEditing(const std::string name, double dailyCalories, ) {
+void dateFileEditing(const std::string name, double dailyCalories) {
 	std::string filename = DATENAME + name + txt;
 	std::fstream File(filename);
 	if (!File.is_open()) {
@@ -885,13 +900,13 @@ void changePersonalData(unsigned& age, unsigned& goal, unsigned& speedOfWeight, 
 	}
 	}
 }
-bool generalScreenNextAction(bool& fail, bool& exit, bool& logout, const std::string input, const std::string name, unsigned& age, unsigned& goal, unsigned& speedOfWeight, double& weight, double& height, bool& gender, bool& isPremium, int& caloriesIntake, int& caloriesUsed, double bmr, int dailyCalories) {
+bool generalScreenNextAction(bool& fail, bool& exit, bool& logout, const std::string input, const std::string name, unsigned& age, unsigned& goal, unsigned& speedOfWeight,double& activityLevel, double& weight, double& height, bool& gender, bool& isPremium, int& caloriesIntake, int& caloriesUsed, double bmr, int dailyCalories) {
 	char number = stringToChar(input, fail);
 	if (failedInput(fail)) {
 		return true;
 	}
 	switch (number) {
-	case '1': dailyCalorieScreen(); break;
+	case '1': dailyCalorieScreen(name,fail,exit,logout,dailyCalories,goal,speedOfWeight, activityLevel, bmr, isPremium); break;
 	case '2': addADailyMeal(name, dailyCalories); break;
 	case '3': addADailyWorkout(name, dailyCalories); break;
 	case '4': currentDateData(name); break;
@@ -902,18 +917,87 @@ bool generalScreenNextAction(bool& fail, bool& exit, bool& logout, const std::st
 	default: return true;
 	}
 }
-void dailyCalorieScreen(bool& fail,bool&exit,bool&logout, const int dailyCalories, const double goal, const double speedOfWeight) {
-	std::cout << "Recommended calorie intake:" << dailyCalories;
-	std::cout << "Current calorie intake"; 
+void calculateMacronutriens(const unsigned int goal, int& carbohydrates, const int recommendedCalorieIntake, int& fat, int& protein, int& carbohydratesGrams, int& proteinGrams, int& fatGrams)
+{
+	if (goal == LOSE_WEIGHT) {
+		carbohydrates = recommendedCalorieIntake * LOSE_WEIGHT_CARBOHYDRATES;
+		fat = recommendedCalorieIntake * LOSE_WEIGHT_FAT;
+		protein = recommendedCalorieIntake * LOSE_WEIGHT_PROTEIN;
+	}
+	if (goal == KEEP_WEIGHT) {
+		carbohydrates = recommendedCalorieIntake * KEEP_WEIGHT_CARBOHYDRATES;
+		fat = recommendedCalorieIntake * KEEP_WEIGHT_FAT;
+		protein = recommendedCalorieIntake * KEEP_WEIGHT_PROTEIN;
+	}
+	if (goal == GAIN_WEIGHT) {
+		carbohydrates = recommendedCalorieIntake * GAIN_WEIGHT_CARBOHYDRATES;
+		fat = recommendedCalorieIntake * GAIN_WEIGHT_FAT;
+		protein = recommendedCalorieIntake * GAIN_WEIGHT_PROTEIN;
+	}
+	carbohydratesGrams = carbohydrates / CARBOHYDRATES_CALORIES_PER_GRAM;
+	proteinGrams = carbohydrates / PROTEIN_CALORIES_PER_GRAM;
+	fatGrams = carbohydrates / FAT_CALORIES_PER_GRAM;
 }
-int dailyCaloriesTillNow(const std::string name) {
-	std::string filename = DATENAME + name + txt;
-	std::ifstream File(filename);
-
-}
-void generalScreen(bool& fail, bool& exit,bool& logout,const std::string name,unsigned& age,unsigned& goal,unsigned& speedOfWeight,double& weight,double& height,double& activityLevel,bool& isPremium,bool& gender, int& caloriesIntake, int& caloriesUsed, double bmr, int dailyCalories) {
+void displayMacronutrients(const int recommendedCalorieIntake, const unsigned goal,bool& exit, bool& logout) {
+	int carbohydrates = 0;
+	int fat = 0;
+	int protein = 0;
+	int proteinGrams = 0;
+	int fatGrams = 0;
+	int carbohydratesGrams = 0;
+	calculateMacronutriens(goal, carbohydrates, recommendedCalorieIntake, fat, protein, carbohydratesGrams, proteinGrams, fatGrams);
+	std::cout << "Recommended protein intake: " << protein << "calories or " << proteinGrams << " grams" << std::endl;
+	std::cout << "Recommended carbohydrates intake: " << carbohydrates << "calories or " << carbohydratesGrams << " grams" << std::endl;
+	std::cout << "Recommended fat intake: " << fat << "calories or " << fatGrams << " grams" << std::endl;
+	std::cout << "Press enter to return to the general screen:" << std::endl;
 	std::string input;
-	dailyNeededCalories(dailyCalories, bmr, gender,weight,height,activityLevel, age); //these are variables such as gender, weight, height, age
+	std::getline(std::cin, input);
+	if (exitCheck(input, exit) || logoutCheck(input, logout)) return;
+}
+void dailyCalorieScreen(const std::string name,bool& fail, bool& exit, bool& logout, int& dailyCalories, const double goal, const double speedOfWeight, const double activityLevel, const int bmr, const double isPremium){
+	int recommendedCalorieIntake = 0;
+	recommendedCalories(recommendedCalorieIntake, speedOfWeight, goal, activityLevel, bmr);
+    dailyCaloriesTillNow(name, dailyCalories, fail);
+	std::cout << "Recommended calorie intake: " << recommendedCalorieIntake << std::endl;
+	std::cout << "Current calorie intake: " << dailyCalories << std::endl;
+	if (!isPremium) std::cout << "If you had premium macronutrients would be displayed here" << std::endl;
+	if (isPremium) {
+		displayMacronutrients(recommendedCalorieIntake, goal, exit, logout);
+	}
+}
+void dailyCaloriesTillNow(const std::string name, int& dailyCalories, bool& fail) {
+	std::string filename = DATENAME + name + txt;
+	std::string read;
+	bool found = false;
+	std::string date = currentDate();
+	std::ifstream File(filename);
+	while (std::getline(File, read, DELIMITER)) {
+		if (read == date) {
+			found = true;
+			break;
+		}
+	}
+	while (std::getline(File, read, DELIMITER) && !checkForDatestring(read)) {
+		bool mOrW = false;
+		if (read[0] = 'w') mOrW = true;
+		if (read[0] = 'm') mOrW = false;
+		std::getline(File, read, DELIMITER);
+		if (mOrW) dailyCalories = dailyCalories - stringToInt(read, fail);
+		if (!mOrW) dailyCalories = dailyCalories + stringToInt(read, fail);
+	}
+	File.close();
+}
+void recommendedCalories(int& recommendedCalories,const unsigned speedOfWeight, const unsigned goal, const double activityLevel, const int bmr) {
+	int deficitOrGain = 0;
+	if (goal == LOSE_WEIGHT) recommendedCalories = bmr  - (speedOfWeight * SPEED_TO_WEIGHT_COEF * CALORIES_PER_KILO);
+	if (goal == KEEP_WEIGHT) recommendedCalories = bmr;
+	if (goal == GAIN_WEIGHT) recommendedCalories = bmr + (speedOfWeight * SPEED_TO_WEIGHT_COEF * CALORIES_PER_KILO);
+}
+void generalScreen(bool& fail, bool& exit,bool& logout,const std::string name,unsigned& age,unsigned& goal,unsigned& speedOfWeight,double& weight,double& height,double& activityLevel,bool& isPremium,bool& gender, int& caloriesIntake, int& caloriesUsed, int dailyCalories) {
+	generalScreenLoop:
+	std::string input;
+	double bmr = 0.0;
+	dailyNeededCalories(dailyCalories,bmr, gender,weight,height,activityLevel, age); //these are variables such as gender, weight, height, age
 	generalScreenReInput:
 	std::cout << "This is the General Screen!" << std::endl;
 	std::cout << "What would you like to do:(enter a number representing your choice)" << std::endl;
@@ -925,11 +1009,15 @@ void generalScreen(bool& fail, bool& exit,bool& logout,const std::string name,un
 	if (exitCheck(input, exit) || logoutCheck(input, logout)){
 		return;
 	}
-	if (generalScreenNextAction()) goto generalScreenReInput;
-	
+	if (generalScreenNextAction(fail,exit,logout,input,name,age,goal,speedOfWeight,activityLevel, weight, height, gender, isPremium,caloriesIntake, caloriesUsed, bmr,dailyCalories)) goto generalScreenReInput;
+	if (exitCheck(input, exit) || logoutCheck(input, logout)) {
+		return;
+	}
+	goto generalScreenLoop;
 }
 int main()
 {
+	startingScreen:
 	bool fail = false;
 	bool exit = false;
 	bool logout = false;
@@ -944,7 +1032,6 @@ int main()
 	unsigned speedOfWeight = 0;
 	bool isPremium =0;
 	bool gender =0;
-	double BMR=0.0;
 	double dailyCalories= 0.0;
 	int caloriesIntake = 0;
 	int caloriesUsed = 0;
@@ -958,6 +1045,10 @@ int main()
 	else reg(fail, exit, name, password, userDataUnsigned, userDataBool, userDataDouble);
 	if (exit) return 0;
 	if (failCheck(fail)) return 2;
-	
-
+	generalScreen(fail, exit, logout, name, age, goal, speedOfWeight, weight, height, activityLevel, isPremium, gender, caloriesIntake, caloriesUsed, dailyCalories);
+	if (logout) {
+		goto startingScreen;
+	}
+	if (failCheck(fail)) return 3;
+	if (exit) return 0;
 }
