@@ -23,5 +23,14 @@
     <ClInclude Include="MyFitnessPal.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="registerAndLoginFunctionalities.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="constants.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="player.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
