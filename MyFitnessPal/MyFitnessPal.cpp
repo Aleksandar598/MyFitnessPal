@@ -5,7 +5,7 @@
 #include <vector>
 #include "player.h"
 #include "constants.h"
-
+//
 std::string currentDate() {
 	std::time_t currentTime = std::time(nullptr);
 	std::tm localTime;
@@ -15,27 +15,24 @@ std::string currentDate() {
 	std::string dateStr(dateString);
 	return dateStr;
 }
-std::string inputDate(bool& exit) {
+std::string inputDate(bool& exit,bool& logout) {
 	std::string input;
-reInputDate:
-	int iter = 0;
-	std::cout << "Please enter date:(yyyy-mm-dd)" << std::endl;
-	std::cin >> input;
-	if (exitCheck(input, exit)) return 0;
-	while (input[iter]) {
-		if (input[iter] < '0' || input[iter]> '9') {
-			if (input[iter] != '-') {
-				std::cerr << "date is not the right format, please input again!";
-				goto reInputDate;
-			}
-		}
+	bool check = false;
+	do {
+		std::cout << "Please enter date:(yyyy-mm-dd)" << std::endl;
+		std::cin >> input;
+		if (exitCheck(input, exit) || logoutCheck(input,logout)) return "";
+		check = checkForDatestring(input);
+		if (!check) std::cout << "Input is not a date" << std::endl;
 	}
+	while (!check);
 	return input;
 }
 bool cinFailCheck() {
 	if (std::cin.fail()) {
 		std::cerr << "Input was not valid, try again:" << std::endl;
 		std::cin.clear();
+		std::cin.ignore();
 		return true;
 	}
 	return false;
@@ -49,7 +46,7 @@ void dateFileEditing(const std::string name, double dailyCalories) {
 	}
 }
 char stringToChar(const std::string string, bool& fail) {
-	if (strLen(string) > 2 || strLen(string) == 1) {
+	if (strLen(string) != 1) {
 		fail = true;
 		return 0;
 	}
@@ -173,6 +170,7 @@ bool exitCheck(const std::string toCheck, bool& exit) { //check if the user wish
 bool logoutCheck(const std::string toCheck, bool& logout) {
 	if (toCheck == "logout" || toCheck == "Logout") {
 		std::cout << "Successfully logged out!" << std::endl;
+		logout = true;
 		return true;
 	}
 	return false;
@@ -233,7 +231,7 @@ void activityInput(const std::string str, double* activityLevel, bool& fail) {
 		*activityLevel = MEDIUM_ACTIVITY;
 		return;
 	}
-	if (str == "high" && str == "High") {
+	if (str == "high" || str == "High") {
 		*activityLevel = HIGH_ACTIVITY;
 		return;
 	}
@@ -309,7 +307,7 @@ size_t strLen(std::string string) {
 	while (string[counter]) {
 		counter++;
 	}
-	return counter - 1;
+	return counter;
 }
 bool multipleDotsCheck(std::string string) {
 	size_t iter = 0;
@@ -364,6 +362,10 @@ void dailyNeededCalories(int& dailyCal, double bmr, const bool gender, const dou
 	dailyCal = BMR(bmr, gender, weight, height, age) * activityLevel;
 
 }
+bool strToBool(const std::string a) {
+	if (a[0] == '0') return false;
+	return true;
+}
 bool loadInfo(bool& fail, std::string& name, std::string& password, unsigned* userDataUnsigned[], bool* userDataBool[], double* userDataDouble[]) {
 
 	std::string str;
@@ -373,12 +375,14 @@ bool loadInfo(bool& fail, std::string& name, std::string& password, unsigned* us
 	std::getline(File, password, DELIMITER);
 	for (int iter = 0;iter < NUM_UNSIGNED_INFO; iter++) {
 		std::getline(File, str, DELIMITER);
-		*userDataUnsigned[iter] = stringToInt(str, fail);
+		*userDataUnsigned[iter] = std::stoi(str);
 	}
 	for (int iter = 0;iter < NUM_BOOL_INFO;iter++) {
-		*userDataBool[iter] = stringToInt(str, fail);
+		std::getline(File, str, DELIMITER);
+		*userDataBool[iter] = stringToInt(str,fail);
 	}
 	for (int iter = 0;iter < NUM_DOUBLE_INFO;iter++) {
+		std::getline(File, str, DELIMITER);
 		*userDataDouble[iter] = std::stod(str);
 	}
 	File.close();
@@ -558,8 +562,7 @@ void addAMealToFile(const std::string name, std::string meal, int calories) {
 	std::ifstream File(filename);
 	bool found = false;
 	std::string dateToday = currentDate();
-	while (!File.eof()) {
-		std::getline(File, copy, DELIMITER);
+	while (std::getline(File, copy, DELIMITER)) {
 		if (copy == dateToday) {
 			found = true;
 			break;
@@ -577,41 +580,76 @@ void addAMealToFile(const std::string name, std::string meal, int calories) {
 	newFile << copy;
 	newFile.close();
 }
-void addADailyMeal(const std::string name, int& dailyCalories) {
+bool doesMealOrWorkoutExistForToday(const std::string name, const std::string input) {
+	std::string filename = DATENAME + name + txt;
+	std::string workoutString = workoutDifferenciator + input;
+	std::string mealString = mealDifferenciator + input;
+	std::ifstream File(filename);
+	std::string copy;
+	bool dateFound = false;
+	std::string date = currentDate();
+	if (!File.is_open()) return false;
+	while (std::getline(File, copy, DELIMITER)) {
+		if (copy == date) {
+			dateFound = true;
+			break;
+		}
+	}
+	while (std::getline(File, copy, DELIMITER) && dateFound) {
+		if (workoutString == copy || mealString == copy) {
+			std::cout << "Meal/workout already exists" << std::endl;
+			return true;
+		}
+		if (checkForDatestring(copy)) break;
+	}
+	return false;
+}
+void addADailyMeal(const std::string name, int& dailyCalories,bool& exit,bool&logout) {
+	std::cin.ignore();
 	std::string input;
 	int calories;
-	std::cout << "Enter a name for the meal:" << std::endl;
-	std::cin >> input;
-	std::cout << "Enter calories:" << std::endl;
-calorieLabel:
-	std::cin >> calories;
+	do {
+		std::cout << "Enter a name for the meal:" << std::endl;
+		std::cin >> input;
+		if (logoutCheck(input, logout) || exitCheck(input, exit)) return;
+	}
+	while (doesMealOrWorkoutExistForToday(name, input));
+	do {
+		std::cout << "Enter calories:" << std::endl;
+		std::cin >> calories;
+		if (logoutCheck(input, logout) || exitCheck(input, exit)) return;
+	}
+	while (cinFailCheck());
 	input = mealDifferenciator + input;
-	if (cinFailCheck()) goto calorieLabel;
 	dailyCalories = dailyCalories + calories;
 	addAMealToFile(name, input, calories);
 }
-void addADailyWorkout(const std::string name, int& dailyCalories) {
+void addADailyWorkout(const std::string name, int& dailyCalories, bool& exit, bool& logout) {
 	std::string input;
 	int calories;
 	std::cout << "Enter a name for the workout:" << std::endl;
 	std::cin >> input;
-	std::cout << "Enter calories burned:" << std::endl;
-calorieLabel:
-	std::cin >> calories;
+	if (logoutCheck(input, logout) || exitCheck(input, exit)) return;
+	do {
+		std::cout << "Enter calories burned:" << std::endl;
+		std::cin >> calories;
+		if (logoutCheck(input, logout) || exitCheck(input, exit)) return;
+	}
+	while (cinFailCheck());
 	input = workoutDifferenciator + input;
-	if (cinFailCheck()) goto calorieLabel;
 	dailyCalories = dailyCalories - calories;
 	addAMealToFile(name, input, calories);
 }
-std::string moveStrByOne(const std::string string) {
-	std::string newStr;
-	size_t iter = 1;
+std::string moveStrByOne(std::string string) {
+	size_t iter = 0;
 	while (string[iter]) {
-		newStr[iter - 1] = string[iter];
+		string[iter] = string[iter+1];
+		if (string[iter] == '\0') break;
+		iter++;
 	}
-	return newStr;
+	return string;
 }
-void currentDateData(const std::string name) {
+void currentDateData(const std::string name,bool& exit,bool& logout) {
 	std::string filename = DATENAME + name + txt;
 	std::string getInfo;
 	size_t iter = 0;
@@ -626,59 +664,85 @@ void currentDateData(const std::string name) {
 		if (getInfo == date) break;
 	}
 	while (std::getline(File, getInfo, DELIMITER)) {
-		data[iter] = moveStrByOne(getInfo);
+		data.push_back( moveStrByOne(getInfo));
 		iter++;
 		std::getline(File, getInfo, DELIMITER);
-		data[iter] = getInfo;
+		data.push_back(getInfo);
 		iter++;
 	}
 	File.close();
 	DisplayDataFromVector(data, iter);
+	std::cout << "Press enter to return to the general screen" << std::endl;
+	std::getline(std::cin, getInfo);
+	logoutCheck(getInfo,logout);
+	exitCheck(getInfo,exit);
 }
-void specificDateData(const std::string name, bool& exit) {
+void specificDateData(const std::string name, bool& exit,bool& logout) {
 	std::string filename = DATENAME + name + txt;
 	std::string getInfo;
+	bool dateFound = false;
 	size_t iter = 0;
-	std::string date = inputDate(exit);
+	std::string date;
 	std::vector<std::string> data;
 	std::ifstream File(filename);
-	if (!File.is_open()) {
-		std::cout << "No recorded data exists" << std::endl;
-		return;
-	}
+	do {
+		File.clear();
+		File.seekg(0, std::ios::beg);
+		date = inputDate(exit, logout);
+		if (exit) return;
+		if (!File.is_open()) {
+			std::cout << "No recorded data exists" << std::endl;
+			return;
+		}
+		while (std::getline(File, getInfo, DELIMITER)) {
+			if (getInfo == date) {
+				dateFound = true;
+				break;
+			}
+		}
+		if (!dateFound) std::cout << "No data exists for this date" << std::endl;
+	} while (!dateFound);
 	while (std::getline(File, getInfo, DELIMITER)) {
-		if (getInfo == date) break;
-	}
-	while (std::getline(File, getInfo, DELIMITER)) {
+		data.push_back(moveStrByOne(getInfo));
+		iter++;
 		std::getline(File, getInfo, DELIMITER);
-		data[iter] = getInfo;
+		data.push_back(getInfo);
 		iter++;
 	}
 	File.close();
 	DisplayDataFromVector(data, iter);
 }
 void DisplayDataFromVector(const std::vector<std::string> data, const size_t size) {
-	for (size_t iter = 1;iter < size;iter + 2) {
-		std::cout << iter << '. ' << data[iter - 1] << "  " << data[iter] << std::endl;
+	int counter = 1;
+	for (size_t iter = 1;iter < size;iter += 2) {
+		std::cout << counter << '.' << data[iter - 1] << std::endl;
+		std::cout << data[iter] << " calories" << std::endl;
+		counter++;
 	}
 }
 bool checkForDatestring(const std::string string) {
-	int iter = 0;
-	while (string[iter]) {
-		if (string[iter] > '9' || string[iter] < '0' || iter>10) {      //10 is the size of a datestring(yyyy-mm-dd)
-			return false;
+	if (strLen(string) != (DATE_SIZE - 1)) return false;
+	for(int iter =0;iter<DATE_SIZE-1;iter++){
+		if (iter == 4 || iter == 7) {
+			if (string[iter] != '-') {
+				return false;
+			}
+			else continue;
 		}
+		if (string[iter] < '0' || string[iter]>'9') return false;
 	}
 	return true;
 }
 
-void deleteDataForADate(const std::string name, bool& exit) {
+void deleteDataForADate(const std::string name, bool& exit, bool& logout) {
 	std::string date;
 	std::string input;
 	std::string saveString = "";
 	std::string filename = DATENAME + name + txt;
-	std::cout << "Choose a day for which the data will be deleted" << std::endl;
-	date = inputDate(exit);
+	do {
+		std::cout << "Choose a day for which the data will be deleted" << std::endl;
+		date = inputDate(exit, logout);
+	} while (checkForDatestring(date));
 	if (exit) return;
 	std::ifstream File(filename);
 	if (!File.is_open()) {
@@ -704,7 +768,7 @@ void deleteDataForADate(const std::string name, bool& exit) {
 	file << saveString;
 	file.close();
 }
-void changeDataForToday(const std::string name, bool& exit, bool& fail) {
+void changeDataForToday(const std::string name, bool& exit, bool& fail, bool& logout) {
 	std::string filename = DATENAME + name + txt;
 	std::string input;
 	int calories = 0;
@@ -722,12 +786,16 @@ void changeDataForToday(const std::string name, bool& exit, bool& fail) {
 		if (input == date) break;
 		saveString = saveString + input + DELIMITER;
 	}
-	if (!std::getline(File, input, DELIMITER)) {
-		std::cout << "No data exists for today" << std::endl;
-		return;
-	}
 	while (std::getline(File, input, DELIMITER)) {
-		data[iter] = input;
+		if (input == "") {
+			std::cout << "No data for today recorded!" << std::endl;
+			return;
+		}
+		if (checkForDatestring(input)) break;
+		data.push_back(moveStrByOne(input));
+		iter++;
+		std::getline(File, input, DELIMITER);
+		data.push_back(input);
 		iter++;
 	}
 	File.close();
@@ -757,12 +825,13 @@ reInputWOrM:
 	else input = mealDifferenciator + input;
 	data[change] = input;
 	change++;
-	std::cout << "Enter calories gained/burned:" << std::endl;
-reInputCalories:
-	std::cin >> calories;
-	if (cinFailCheck()) goto reInputCalories;
+	do {
+		std::cout << "Enter calories gained/burned:" << std::endl;
+		std::cin >> calories;
+	}
+	while (cinFailCheck());
 	data[change] = std::to_string(calories);
-	for (int i = 0;i < iter;iter++) {
+	for (int i = 0;i < iter;i++) {
 		saveString = saveString + DELIMITER + data[i];
 	}
 	std::ifstream file(filename);
@@ -783,6 +852,7 @@ void changePersonalData(unsigned& age, unsigned& goal, unsigned& speedOfWeight, 
 	std::cout << "Type the number of what you wish to change:" << std::endl;
 reInput:
 	std::cin >> input;
+	std::cin.ignore();
 	if (exitCheck(input, exit) || logoutCheck(input, logout)) return;
 	unsigned switchNum = stringToInt(input, fail);
 	switch (switchNum) {
@@ -806,12 +876,12 @@ bool generalScreenNextAction(bool& fail, bool& exit, bool& logout, const std::st
 	}
 	switch (number) {
 	case '1': dailyCalorieScreen(name, fail, exit, logout, dailyCalories, goal, speedOfWeight, activityLevel, bmr, isPremium); break;
-	case '2': addADailyMeal(name, dailyCalories); break;
-	case '3': addADailyWorkout(name, dailyCalories); break;
-	case '4': currentDateData(name); break;
-	case '5': specificDateData(name, exit); break;
-	case '6': deleteDataForADate(name, exit); break;
-	case '7': changeDataForToday(name, exit, fail); break;
+	case '2': addADailyMeal(name, dailyCalories,exit, logout); break;
+	case '3': addADailyWorkout(name, dailyCalories,exit,logout); break;
+	case '4': currentDateData(name,exit, logout); break;
+	case '5': specificDateData(name, exit, logout); break;
+	case '6': deleteDataForADate(name, exit, logout); break;
+	case '7': changeDataForToday(name, exit, fail,logout); break;
 	case '8': changePersonalData(age, goal, speedOfWeight, weight, height, gender, isPremium, logout, exit, fail); break;
 	default: return true;
 	}
@@ -845,9 +915,9 @@ void displayMacronutrients(const int recommendedCalorieIntake, const unsigned go
 	int fatGrams = 0;
 	int carbohydratesGrams = 0;
 	calculateMacronutriens(goal, carbohydrates, recommendedCalorieIntake, fat, protein, carbohydratesGrams, proteinGrams, fatGrams);
-	std::cout << "Recommended protein intake: " << protein << "calories or " << proteinGrams << " grams" << std::endl;
-	std::cout << "Recommended carbohydrates intake: " << carbohydrates << "calories or " << carbohydratesGrams << " grams" << std::endl;
-	std::cout << "Recommended fat intake: " << fat << "calories or " << fatGrams << " grams" << std::endl;
+	std::cout << "Recommended protein intake: " << protein << " calories or " << proteinGrams << " grams" << std::endl;
+	std::cout << "Recommended carbohydrates intake: " << carbohydrates << " calories or " << carbohydratesGrams << " grams" << std::endl;
+	std::cout << "Recommended fat intake: " << fat << " calories or " << fatGrams << " grams" << std::endl;
 	std::cout << "Press enter to return to the general screen:" << std::endl;
 	std::string input;
 	std::getline(std::cin, input);
@@ -855,17 +925,19 @@ void displayMacronutrients(const int recommendedCalorieIntake, const unsigned go
 }
 void dailyCalorieScreen(const std::string name, bool& fail, bool& exit, bool& logout, int& dailyCalories, const double goal, const double speedOfWeight, const double activityLevel, const int bmr, const double isPremium) {
 	int recommendedCalorieIntake = 0;
+	dailyCalories = 0;
 	std::string input;
 	recommendedCalories(recommendedCalorieIntake, speedOfWeight, goal, activityLevel, bmr);
 	dailyCaloriesTillNow(name, dailyCalories, fail);
-	std::cout << "Recommended calorie intake: " << recommendedCalorieIntake << std::endl;
-	std::cout << "Current calorie intake: " << dailyCalories << std::endl;
+	std::cout << "Recommended calories for the day: " << recommendedCalorieIntake << std::endl;
+	std::cout << "Current calories for the day: " << dailyCalories << std::endl;
 	if (!isPremium) std::cout << "If you had premium macronutrients would be displayed here" << std::endl;
 	if (isPremium) {
 		displayMacronutrients(recommendedCalorieIntake, goal, exit, logout);
 	}
 	std::cout << "Type anything to return to general menu" << std::endl;
 	std::getline(std::cin, input);
+	if (logoutCheck(input,logout)) return;
 }
 void dailyCaloriesTillNow(const std::string name, int& dailyCalories, bool& fail) {
 	std::string filename = DATENAME + name + txt;
@@ -882,8 +954,8 @@ void dailyCaloriesTillNow(const std::string name, int& dailyCalories, bool& fail
 	}
 	while (std::getline(File, read, DELIMITER) && !checkForDatestring(read)) {
 		bool mOrW = false;
-		if (read[0] = 'w') mOrW = true;
-		if (read[0] = 'm') mOrW = false;
+		if (read[0] = workoutDifferenciator) mOrW = true;
+		if (read[0] = mealDifferenciator) mOrW = false;
 		std::getline(File, read, DELIMITER);
 		if (mOrW) dailyCalories = dailyCalories - stringToInt(read, fail);
 		if (!mOrW) dailyCalories = dailyCalories + stringToInt(read, fail);
@@ -919,39 +991,40 @@ void generalScreen(bool& fail, bool& exit, bool& logout, const std::string name,
 	}
 }
 int main()
-{
-startingScreen:
+{		
 	bool fail = false;
 	bool exit = false;
 	bool logout = false;
-	unsigned nextAction = 0;
-	std::string name = "null";
-	std::string password = "null";
-	unsigned age = 0;
-	double weight = 0.0;
-	unsigned height = 0;
-	double activityLevel = 0.0;
-	unsigned goal = 0;
-	unsigned speedOfWeight = 0;
-	bool isPremium = 0;
-	bool gender = 0;
-	double dailyCalories = 0.0;
-	int caloriesIntake = 0;
-	int caloriesUsed = 0;
-	unsigned* userDataUnsigned[NUM_UNSIGNED_INFO] = { &age, &goal,&speedOfWeight, &height };
-	bool* userDataBool[NUM_BOOL_INFO] = { &gender, &isPremium };
-	double* userDataDouble[NUM_DOUBLE_INFO] = {&weight, &activityLevel };
-	startingScreen(fail, exit, nextAction);
-	if (failCheck(fail)) return 1;
-	if (exit) return 0;
-	if (nextAction) login(fail, exit, name, password, userDataUnsigned, userDataBool, userDataDouble);
-	else reg(fail, exit, name, password, userDataUnsigned, userDataBool, userDataDouble);
-	if (exit) return 0;
-	if (failCheck(fail)) return 2;
-	generalScreen(fail, exit, logout, name, age, goal, speedOfWeight, weight, height, activityLevel, isPremium, gender, caloriesIntake, caloriesUsed, dailyCalories);
-	if (logout) {
-		goto startingScreen;
+	do {
+		logout = false;
+		unsigned nextAction = 0;
+		std::string name = "null";
+		std::string password = "null";
+		unsigned age = 0;
+		double weight = 0.0;
+		unsigned height = 0;
+		double activityLevel = 0.0;
+		unsigned goal = 0;
+		unsigned speedOfWeight = 0;
+		bool isPremium = 0;
+		bool gender = 0;
+		double dailyCalories = 0.0;
+		int caloriesIntake = 0;
+		int caloriesUsed = 0;
+		unsigned* userDataUnsigned[NUM_UNSIGNED_INFO] = { &age, &goal,&speedOfWeight, &height };
+		bool* userDataBool[NUM_BOOL_INFO] = { &gender, &isPremium };
+		double* userDataDouble[NUM_DOUBLE_INFO] = { &weight, &activityLevel };
+		startingScreen(fail, exit, nextAction);
+		if (failCheck(fail)) return 1;
+		if (exit) return 0;
+		if (nextAction) login(fail, exit, name, password, userDataUnsigned, userDataBool, userDataDouble);
+		else reg(fail, exit, name, password, userDataUnsigned, userDataBool, userDataDouble);
+		if (exit) return 0;
+		if (failCheck(fail)) return 2;
+		generalScreen(fail, exit, logout, name, age, goal, speedOfWeight, weight, height, activityLevel, isPremium, gender, caloriesIntake, caloriesUsed, dailyCalories);
+		std::cin.ignore();
 	}
+	while (logout);
 	if (failCheck(fail)) return 3;
 	if (exit) return 0;
 }
