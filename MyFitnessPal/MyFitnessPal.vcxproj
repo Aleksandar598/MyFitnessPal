@@ -131,9 +131,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="constants.h" />
+    <ClInclude Include="functionsThatWorkWithFiles.h" />
+    <ClInclude Include="uncategorizedFunctions.h" />
     <ClInclude Include="MyFitnessPal.h" />
     <ClInclude Include="player.h" />
-    <ClInclude Include="registerAndLoginFunctionalities.h" />
+    <ClInclude Include="registerFunctions.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
