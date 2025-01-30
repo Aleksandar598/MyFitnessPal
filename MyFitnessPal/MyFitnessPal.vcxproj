@@ -129,6 +129,12 @@
   <ItemGroup>
     <ClCompile Include="MyFitnessPal.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="constants.h" />
+    <ClInclude Include="MyFitnessPal.h" />
+    <ClInclude Include="player.h" />
+    <ClInclude Include="registerAndLoginFunctionalities.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
