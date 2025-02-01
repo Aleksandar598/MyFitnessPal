@@ -4,7 +4,7 @@ void generalScreenNextAction(const std::string name,const std::string password, 
 	do {
 		menuSeparator();
 		std::cout << "What would you like to do next?" << std::endl;
-		std::cout << "1.Display full calorie data for today." << std::endl;
+		std::cout << "1. Display full calorie data for today." << std::endl;
 		std::cout << "2. Add a Meal for the day." << std::endl;
 		std::cout << "3. Add a Workout for the day." << std::endl;
 		std::cout << "4. Display all workout and meals for today." << std::endl;
@@ -72,6 +72,7 @@ unsigned recommendedCalorieIntake(const unsigned age, const double weight, const
 	return recommendedCalorieIntake;
 }
 void caloriesForToday(const unsigned caloriesIntake, const unsigned caloriesUsed, const int dailyCalorieBalance,const unsigned recommendedCalories,const unsigned goal, const bool isPremium, bool& exit, bool& logout) {
+	menuSeparator();
 	std::cout << "Your daily calorie intake is: " << caloriesIntake << std::endl;
 	std::cout << "Your daily calorie usage is: " << caloriesUsed << std::endl;
 	std::cout << "Your daily calorie balance is: " << dailyCalorieBalance << std::endl;
@@ -123,6 +124,8 @@ void addMeal(const std::string name,bool& exit,bool&logout) {
 	unsigned calories = 0;
 	std::cout << "Please enter the name of the meal:" << std::endl;
 	std::getline(std::cin, mealName);
+	doesMealOrWorkoutExist(name, mealName, exit, logout);
+	if (exit || logout) return;
 	if (logoutOrExitCheck(mealName, exit, logout)) return;
 	do {
 		std::cout << "Please enter the amount of calories in the meal:" << std::endl;
@@ -140,6 +143,8 @@ void addWorkout(const std::string name, bool& exit, bool& logout) {
 	unsigned calories = 0;
 	std::cout << "Please enter the name of the workout:" << std::endl;
 	std::getline(std::cin, workoutName);
+	doesMealOrWorkoutExist(name, workoutName, exit, logout);
+	if (exit || logout) return;
 	if (logoutOrExitCheck(workoutName, exit, logout)) return;
 	do {
 		std::cout << "Please enter the amount of calories used in the workout:" << std::endl;
@@ -151,18 +156,23 @@ void addWorkout(const std::string name, bool& exit, bool& logout) {
 	addMealorWorkoutToFile(name, workoutName, calories);
 }
 void displayDataForToday(std::string name, bool& exit, bool& logout) {
+	menuSeparator();
 	std::string date = currentDate();
 	std::string read;
+	bool dateFound = false;
 	std::vector<std::string> dailyInfo;
-	dailyInfo = loadDataForASpecificDay(name, date);
-	vectorDataPrint(dailyInfo);
+	dailyInfo = loadDataForASpecificDay(name, date, dateFound);
+	if (dateFound)vectorDataPrint(dailyInfo);
+	else std::cout << "There is no data for today yet!" << std::endl;
 	std::cout << "Press anything to continue." << std::endl;
 	std::getline(std::cin, read);
 	logoutOrExitCheck(read, exit, logout);
 }
 void displayDataForASpecificDay(std::string name, bool& exit, bool& logout) {
+	menuSeparator();
 	std::string date;
 	std::string read;
+	bool dateExists = false;
 	std::vector<std::string> dailyInfo;
 	bool fail = false;
 	do {
@@ -175,8 +185,9 @@ void displayDataForASpecificDay(std::string name, bool& exit, bool& logout) {
 			fail = true;
 		}
 	} while (fail);
-	dailyInfo = loadDataForASpecificDay(name, date);
-	vectorDataPrint(dailyInfo);
+	dailyInfo = loadDataForASpecificDay(name, date, dateExists);
+	if (dateExists) vectorDataPrint(dailyInfo);
+	else std::cout << "There is no data" << std::endl;
 	std::cout << "Press anything to continue." << std::endl;
 	std::getline(std::cin, read);
 	logoutOrExitCheck(read, exit, logout);
@@ -205,18 +216,22 @@ void deleteDataForSpecificDay(std::string name, bool& exit, bool& logout) {
 	std::getline(std::cin, date);
 }
 void changeDataForToday(const std::string name, bool& exit, bool& logout) {
+	menuSeparator();
 	std::string date = currentDate();
+	bool dateFound = false;
 	std::vector<std::string> dailyInfo;
-	dailyInfo = loadDataForASpecificDay(name, date);
-	dailyInfo = vectorDataModify(dailyInfo, exit, logout);
-	if (exit || logout) return;
-	saveModifiedInfoForToday(name, dailyInfo);
-	std::cout << "Data has been modified." << std::endl;
+	dailyInfo = loadDataForASpecificDay(name, date,dateFound);
+	if (dateFound) {
+		dailyInfo = vectorDataModify(dailyInfo, exit, logout);
+		if (exit || logout) return;
+		saveModifiedInfoForToday(name, dailyInfo);
+		std::cout << "Data has been modified." << std::endl;
+	}
+	else std::cout << "Data for this day not found!" << std::endl;
 	std::cout << "Press anything to continue." << std::endl;
 	std::getline(std::cin, date);
 }
 std::vector<std::string> vectorDataModify(std::vector<std::string> dailyInfo, bool& exit, bool& logout) {
-	menuSeparator();
 	std::string input;
 	size_t choice = 0;
 	bool fail = false;
@@ -314,27 +329,26 @@ void changePersonalData(const std::string name,const std::string password, unsig
 	case '3': goalInput(&goal, exit, logout); break;
 	case '4': weightInput(&weight, exit, logout); break;
 	case '5': activityLevelInput(&activityLevel, exit, logout); break;
-	case '6': speedOfWeightInput(&speedOfWeight, exit, logout); break;
+	case '6': speedOfWeightChange(speedOfWeight,goal, exit, logout); break;
 	case '7': genderInput(&gender, exit, logout); break;
 	case '8': premiumInput(&isPremium, exit, logout); break;
 	}
 	if (exit || logout) return;
 	UserDataSave(name, password, unsignedDataArray, doubleDataArray, boolDataArray);
 }
-std::string speedToWeightOutput(const unsigned speedToWeight) {
-	if (speedToWeight == SLOW_SPEEDTOWEIGHT) return "0.25 kg a week";
-	if (speedToWeight == MEDIUM_SPEEDTOWEIGHT) return "0.5 kg a week";
-	if (speedToWeight == HIGH_SPEEDTOWEIGHT) return "0.75 kg a week";
-	if (speedToWeight == VERY_HIGH_SPEEDTOWEIGHT) return "1 kg a week";
-	if (speedToWeight == 0) return "0 kg a week";
-	return "";
+std::string speedToWeightOutput(const double speedToWeight) {
+	if (std::fabs(speedToWeight - SLOW_SPEEDTOWEIGHT) < EPSILON) return "0.25 kg a week";
+	if (std::fabs(speedToWeight - MEDIUM_SPEEDTOWEIGHT) < EPSILON) return "0.5 kg a week";
+	if (std::fabs(speedToWeight - HIGH_SPEEDTOWEIGHT) < EPSILON) return "0.75 kg a week";
+	if (std::fabs(speedToWeight - VERY_HIGH_SPEEDTOWEIGHT) < EPSILON) return "1 kg a week";
+	return "0 kg a week";
 }
-std::string activityLevelOutput(const unsigned activityLevel) {
-	if (activityLevel == VERY_LOW_ACTIVITY) return "Very low";
-	if (activityLevel == LOW_ACTIVITY) return "Low";
-	if (activityLevel == MEDIUM_ACTIVITY) return "Medium";
-	if (activityLevel == HIGH_ACTIVITY) return "High";
-	if (activityLevel == VERY_HIGH_ACTIVITY) return "Very high";
+std::string activityLevelOutput(const double activityLevel) {
+	if (std::fabs(activityLevel - VERY_LOW_ACTIVITY) < EPSILON) return "Very low";
+	if (std::fabs(activityLevel - LOW_ACTIVITY) < EPSILON) return "Low";
+	if (std::fabs(activityLevel - MEDIUM_ACTIVITY) < EPSILON) return "Medium";
+	if (std::fabs(activityLevel - HIGH_ACTIVITY) < EPSILON) return "High";
+	if (std::fabs(activityLevel - VERY_HIGH_ACTIVITY) < EPSILON) return "Very high";
 	return "";
 }
 std::string genderOutput(const bool a) {
@@ -356,4 +370,36 @@ std::string goalOutput(const unsigned goal) {
 std::string isPremiumOutput(const bool isPremium) {
 	if (isPremium) return "Yes";
 	return "No";
+}
+void speedOfWeightChange(double& speedOfWeight,const unsigned goal, bool& exit, bool& logout) {
+	menuSeparator();
+	std::string input;
+	if (goal == KEEP_WEIGHT) {
+		std::cout << "First change your goal to either gain weight or lose weight!" << std::endl;
+		std::cout << "Enter anything to continue" << std::endl;
+		std::getline(std::cin, input);
+		return;
+	}
+	do {
+		std::cout << "How fast would you like to lose/gain weight in a week?(0.25kg,0.5 kg. 0.75 kg or 1 kg)" << std::endl;
+		std::getline(std::cin, input);
+		if (logoutOrExitCheck(input, exit, logout)) return;
+		if (input == "0.25" || input == "0.25 kg") {
+			speedOfWeight = SLOW_SPEEDTOWEIGHT;
+			return;
+		}
+		if (input == "0.5" || input == "0.5 kg") {
+			speedOfWeight = MEDIUM_SPEEDTOWEIGHT;
+			return;
+		}
+		if (input == "0.75" || input == "0.75 kg") {
+			speedOfWeight = HIGH_SPEEDTOWEIGHT;
+			return;
+		}
+		if (input == "1" || input == "1 kg") {
+			speedOfWeight = VERY_HIGH_SPEEDTOWEIGHT;
+			return;
+		}
+		failedInput();
+	} while (true);
 }

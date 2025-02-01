@@ -8,6 +8,8 @@ void nameInput(std::string& name, bool& exit, bool& logout) {
 		std::cout << "Please enter an Username you will use:" << std::endl;
 		std::getline(std::cin, input);
 		if (logoutOrExitCheck(input, exit, logout)) return;
+		doesProfileExistReg(input, exit, logout);
+		if (exit || logout) return;
 		name = input;
 		do {
 			std::cout << "Is this the name you would like to use: " << input << std::endl;

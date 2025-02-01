@@ -10,7 +10,7 @@ bool logoutOrExitCheck(const std::string input, bool& exit,bool& logout) {
 		exit = true;
 		return true;
 	}
-	if (input == "logout" && input == "Logout") {
+	if (input == "logout" || input == "Logout") {
 		logout = true;
 		return true;
 	}
@@ -91,7 +91,6 @@ void removeFirstCharacterFromString(std::string& string) {
 	string[iter] = '\0';
 }
 void vectorDataPrint(std::vector<std::string> dailyInfo) {
-	menuSeparator();
 	size_t counter = 1;
 	std::cout << "Workouts and meals for the day:" << std::endl;
 	for (size_t iter = 0;iter < dailyInfo.size();iter++) {
@@ -99,4 +98,15 @@ void vectorDataPrint(std::vector<std::string> dailyInfo) {
 		counter++;
 		iter++;
 	}
+}
+void howToUse(bool& exit,bool& logout ) {
+	menuSeparator();
+	std::string input;
+	std::cout << "Basic commands:" << std::endl;
+	std::cout << "exit - ends the program and logs out the user if logged in" << std::endl;
+	std::cout << "logout - logs out the user and returns him to thestarting menu" << std::endl;
+	std::cout << "These are the only two commands that you can always type to activate" << std::endl;
+	std::cout << "Enjoy using MyFitnessPal! Press anything to return" << std::endl;
+	std::getline(std::cin, input);
+	logoutOrExitCheck(input, exit, logout);
 }

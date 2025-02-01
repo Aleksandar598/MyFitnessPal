@@ -13,8 +13,9 @@
 bool startingScreen(bool& exit,bool& logout) {
 	do {
 		std::string input;
+		bool infoCheck = false;
 		menuSeparator();
-		std::cout << "Hello to MyFitnessPal! Would you like to login or register?" << std::endl;
+		std::cout << "Hello to MyFitnessPal! Would you like to login or register?(You can also type 'info' for info)" << std::endl;
 		std::getline(std::cin, input);
 		if (input == "register" || input == "Register") {
 			return true;
@@ -22,8 +23,15 @@ bool startingScreen(bool& exit,bool& logout) {
 		if (input == "login" || input == "Login") {
 			return false;
 		}
+		if (input == "info" || input == "Info") {
+			infoCheck = true;
+			 howToUse(exit,logout);
+			 if (exit || logout) return true;
+		}
 		if (logoutOrExitCheck(input, exit, logout)) return true;
-		failedInput();
+		if (!infoCheck) {
+			failedInput();
+		}
 	}
 	while (true);
 
@@ -83,7 +91,6 @@ void login(std::string& name, std::string& password, unsigned* unsignedDataArray
 	} while (true);
 }
 void generalScreen(const std::string name,const std::string password,unsigned* unsignedDataArray[],double* doubleDataArray[],bool* boolDataArray[], unsigned& caloriesIntake,unsigned& caloriesUsed, int& dailyCalorieBalance, unsigned& age,unsigned&height,unsigned& goal, double& speedOfWeight, double& weight, double& activityLevel, bool& gender, bool& isPremium, bool& exit, bool& logout) {
-	menuSeparator();
 	bool reloadCalories = false;
 	loadCaloriesData(name, caloriesIntake, caloriesUsed);
 	dailyCalorieBalance = caloriesIntake - caloriesUsed;
@@ -93,6 +100,7 @@ void generalScreen(const std::string name,const std::string password,unsigned* u
 			dailyCalorieBalance = caloriesIntake - caloriesUsed;
 			reloadCalories = false;
 		}
+		menuSeparator();
 		unsigned recommendedDailyCalories = recommendedCalorieIntake(age, weight, height, goal, gender, activityLevel, speedOfWeight);
 		std::cout << "Welcome to the general screen, " << name << '!' << std::endl;
 		std::cout << "Your daily calorie intake is: " << caloriesIntake << std::endl;
@@ -130,7 +138,9 @@ int main() {
 		}
 		else login(name, password, unsignedDataArray, doubleDataArray, boolDataArray, calorieIntake, caloriesUsed, exit, logout);
 		if (exit) return 0;
-		generalScreen(name, password, unsignedDataArray, doubleDataArray, boolDataArray, calorieIntake, caloriesUsed, dailyCalorieBalance, age, height, goal, speedOfWeight, weight, activityLevel, gender, isPremium, exit, logout);
-		if (exit) return 0;
+		if (!logout) {
+			generalScreen(name, password, unsignedDataArray, doubleDataArray, boolDataArray, calorieIntake, caloriesUsed, dailyCalorieBalance, age, height, goal, speedOfWeight, weight, activityLevel, gender, isPremium, exit, logout);
+			if (exit) return 0;
+		}
 	} while (logout);
 }

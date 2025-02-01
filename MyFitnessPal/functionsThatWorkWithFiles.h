@@ -12,7 +12,10 @@ void doesProfileExistReg(std::string& name, bool& exit, bool& logout) { //the id
 			menuSeparator();
 			std::cout << "Username is taken please choose another one:" << std::endl;
 			std::getline(std::cin, name);
-			if (logoutOrExitCheck(name, exit, logout)) return;
+			if (logoutOrExitCheck(name, exit, logout)) {
+				allProfilesFile.close();
+				return;
+			}
 			allProfilesFile.clear(); 
 			allProfilesFile.seekg(0, std::ios::beg);
 		}
@@ -158,9 +161,9 @@ void addMealorWorkoutToFile(const std::string name, const std::string mealorWork
 	dateFileWrite << copy << date << DELIMITER << mealorWorkoutName << DELIMITER << calories << DELIMITER;
 	dateFileWrite.close();
 }
-std::vector<std::string> loadDataForASpecificDay(const std::string name, const std::string date) {
+std::vector<std::string> loadDataForASpecificDay(const std::string name, const std::string date, bool& dateFound) {
 	std::string read;
-	bool dateFound = false;
+	dateFound = false;
 	std::vector<std::string> dailyInfo;
 	std::ifstream dateFile(name + DATEFILE + TXT);
 	while(std::getline(dateFile, read,DELIMITER))
@@ -247,5 +250,35 @@ void saveModifiedInfoForToday(const std::string name, std::vector<std::string> d
 		copy += dailyInfo[iter] + DELIMITER;
 	}
 	dateFile.close();
+}
+void doesMealOrWorkoutExist(const std::string name, std::string& mealOrWorkoutName,bool&exit, bool& logout) {
+	std::string read;
+	std::string date = currentDate();
+	bool dateFound = false;
+	bool repeat = false;
+	std::ifstream dateFile(name + DATEFILE + TXT);
+	do {
+		dateFound = false;
+		repeat = false;
+		std::string workoutCheck = WORKOUT_DIFFERENTIATOR + mealOrWorkoutName;
+		std::string mealCheck = MEAL_DIFFERENTIATOR + mealOrWorkoutName;
+		while (std::getline(dateFile, read, DELIMITER)) {
+			if (read == date) {
+				dateFound = true;
+				break;
+			}
+		}
+		while (std::getline(dateFile, read, DELIMITER) && dateFound) {
+			if (checkForDatestring(read)) break;
+			if (read == workoutCheck || read == mealCheck) {
+				std::cout << "There is a meal/workout with this name, please enter another:" << std::endl;
+				std::getline(std::cin, mealOrWorkoutName);
+				if (logoutOrExitCheck(mealOrWorkoutName, exit, logout)) return;
+				dateFile.clear();
+				dateFile.seekg(0, std::ios::beg);
+				repeat = true;
+			}
+		}
+	} while (repeat);
 }
 
