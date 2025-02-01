@@ -52,7 +52,7 @@ void heightInput(unsigned* height, bool& exit, bool& logout) {
 		std::cout << "Please enter your height:" << std::endl;
 		std::getline(std::cin, input);
 		if (logoutOrExitCheck(input, exit, logout)) return;
-	} while (isUnsigned(input));
+	} while (!isUnsigned(input));
 	*height = std::stoi(input);
 }
 void goalInput(unsigned* goal, bool& exit, bool& logout) {

@@ -132,6 +132,7 @@
   <ItemGroup>
     <ClInclude Include="constants.h" />
     <ClInclude Include="functionsThatWorkWithFiles.h" />
+    <ClInclude Include="generalScreenFunctions.h" />
     <ClInclude Include="uncategorizedFunctions.h" />
     <ClInclude Include="MyFitnessPal.h" />
     <ClInclude Include="player.h" />
