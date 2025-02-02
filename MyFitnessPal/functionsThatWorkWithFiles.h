@@ -227,18 +227,25 @@ bool deleteDataFromFile(const std::string name, const std::string date) {
 	dateFileWrite.close();
 	return dateFound;
 }
-void saveModifiedInfoForToday(const std::string name, std::vector<std::string> dailyInfo) {
+void saveModifiedInfoForToday(const std::string name, std::vector<std::string> dailyInfo, const bool deletion) {
 	std::ifstream dateFile(name + DATEFILE + TXT);
 	std::string copy;
 	std::string read;
 	std::string date = currentDate();
 	while (std::getline(dateFile, read, DELIMITER))
 	{
-		copy += read + DELIMITER;
 		if (read == date) {
 			break;
 		}
+		copy += read + DELIMITER;
 	}
+	if (deletion || dailyInfo.size() == 0) {
+		std::ofstream dateFileWrite(name + DATEFILE + TXT);
+		dateFileWrite << copy;
+		dateFileWrite.close();
+		return;
+	}
+	else copy += read + DELIMITER;
 	while (std::getline(dateFile, read, DELIMITER))
 	{
 		if (checkForDatestring(read)) {
@@ -248,37 +255,13 @@ void saveModifiedInfoForToday(const std::string name, std::vector<std::string> d
 	}
 	for (size_t iter = 0;iter < dailyInfo.size();iter++) {
 		copy += dailyInfo[iter] + DELIMITER;
+		std::getline(dateFile, read, DELIMITER);
 	}
+	std::getline(dateFile, read);
+	copy = copy + read;
 	dateFile.close();
-}
-void doesMealOrWorkoutExist(const std::string name, std::string& mealOrWorkoutName,bool&exit, bool& logout) {
-	std::string read;
-	std::string date = currentDate();
-	bool dateFound = false;
-	bool repeat = false;
-	std::ifstream dateFile(name + DATEFILE + TXT);
-	do {
-		dateFound = false;
-		repeat = false;
-		std::string workoutCheck = WORKOUT_DIFFERENTIATOR + mealOrWorkoutName;
-		std::string mealCheck = MEAL_DIFFERENTIATOR + mealOrWorkoutName;
-		while (std::getline(dateFile, read, DELIMITER)) {
-			if (read == date) {
-				dateFound = true;
-				break;
-			}
-		}
-		while (std::getline(dateFile, read, DELIMITER) && dateFound) {
-			if (checkForDatestring(read)) break;
-			if (read == workoutCheck || read == mealCheck) {
-				std::cout << "There is a meal/workout with this name, please enter another:" << std::endl;
-				std::getline(std::cin, mealOrWorkoutName);
-				if (logoutOrExitCheck(mealOrWorkoutName, exit, logout)) return;
-				dateFile.clear();
-				dateFile.seekg(0, std::ios::beg);
-				repeat = true;
-			}
-		}
-	} while (repeat);
+	std::ofstream dateFileWrite(name + DATEFILE + TXT);
+	dateFileWrite << copy;
+	dateFileWrite.close();
 }
 

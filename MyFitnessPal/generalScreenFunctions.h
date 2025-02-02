@@ -124,7 +124,6 @@ void addMeal(const std::string name,bool& exit,bool&logout) {
 	unsigned calories = 0;
 	std::cout << "Please enter the name of the meal:" << std::endl;
 	std::getline(std::cin, mealName);
-	doesMealOrWorkoutExist(name, mealName, exit, logout);
 	if (exit || logout) return;
 	if (logoutOrExitCheck(mealName, exit, logout)) return;
 	do {
@@ -143,7 +142,6 @@ void addWorkout(const std::string name, bool& exit, bool& logout) {
 	unsigned calories = 0;
 	std::cout << "Please enter the name of the workout:" << std::endl;
 	std::getline(std::cin, workoutName);
-	doesMealOrWorkoutExist(name, workoutName, exit, logout);
 	if (exit || logout) return;
 	if (logoutOrExitCheck(workoutName, exit, logout)) return;
 	do {
@@ -219,19 +217,20 @@ void changeDataForToday(const std::string name, bool& exit, bool& logout) {
 	menuSeparator();
 	std::string date = currentDate();
 	bool dateFound = false;
+	bool deletion = false;
 	std::vector<std::string> dailyInfo;
 	dailyInfo = loadDataForASpecificDay(name, date,dateFound);
 	if (dateFound) {
-		dailyInfo = vectorDataModify(dailyInfo, exit, logout);
+		dailyInfo = vectorDataModify(dailyInfo,deletion, exit, logout);
 		if (exit || logout) return;
-		saveModifiedInfoForToday(name, dailyInfo);
+		saveModifiedInfoForToday(name, dailyInfo, deletion);
 		std::cout << "Data has been modified." << std::endl;
 	}
 	else std::cout << "Data for this day not found!" << std::endl;
 	std::cout << "Press anything to continue." << std::endl;
 	std::getline(std::cin, date);
 }
-std::vector<std::string> vectorDataModify(std::vector<std::string> dailyInfo, bool& exit, bool& logout) {
+std::vector<std::string> vectorDataModify(std::vector<std::string> dailyInfo,bool& deletion, bool& exit, bool& logout) {
 	std::string input;
 	size_t choice = 0;
 	bool fail = false;
@@ -244,11 +243,12 @@ std::vector<std::string> vectorDataModify(std::vector<std::string> dailyInfo, bo
 			if (logoutOrExitCheck(input, exit, logout)) return dailyInfo;
 		} while (!isUnsigned(input));
 		choice = std::stoi(input);
-		if (choice > dailyInfo.size() / 2) {
+		if (choice > dailyInfo.size() / 2+2) {
 			failedInput();
 			fail = true;
 		}
 	} while (fail);
+	choice = choice * 2 - 2; // this way we will modify the data from the string
 	do {
 		fail = true;
 		std::cout << "Would you like to delete the meal/workout?" << std::endl;
@@ -257,6 +257,7 @@ std::vector<std::string> vectorDataModify(std::vector<std::string> dailyInfo, bo
 		if (input == "Yes" || input == "yes") {
 			dailyInfo.erase(dailyInfo.begin() + choice);
 			dailyInfo.erase(dailyInfo.begin() + choice);
+			deletion = true;
 			fail = false;
 		}
 		if (input == "No" || input == "no") {
@@ -269,11 +270,11 @@ std::vector<std::string> vectorDataModify(std::vector<std::string> dailyInfo, bo
 }
 std::vector<std::string> changeWorkoutOrMeal(std::vector<std::string> dailyInfo, size_t choice, bool& exit, bool& logout) {
 	std::string input;
-	std::cout << "What would you like to change it to?(Workout or meal)" << std::endl;
-	std::getline(std::cin, input);
-	if (logoutOrExitCheck(input, exit, logout)) return dailyInfo;
 	bool fail = true;
 	do {
+		std::cout << "What would you like to change it to?(Workout or meal)" << std::endl;
+		std::getline(std::cin, input);
+		if (logoutOrExitCheck(input, exit, logout)) return dailyInfo;
 		if (input == "Workout" || input == "workout") {
 			fail = false;
 			std::cout << "Please enter the name of the workout:" << std::endl;
@@ -326,7 +327,7 @@ void changePersonalData(const std::string name,const std::string password, unsig
 	switch (input[0]) {
 	case '1': ageInput(&age, exit, logout); break;
 	case '2': heightInput(&height, exit, logout); break;
-	case '3': goalInput(&goal, exit, logout); break;
+	case '3': goalInputGeneralScreen(&goal,&speedOfWeight, exit, logout); break;
 	case '4': weightInput(&weight, exit, logout); break;
 	case '5': activityLevelInput(&activityLevel, exit, logout); break;
 	case '6': speedOfWeightChange(speedOfWeight,goal, exit, logout); break;
@@ -398,6 +399,29 @@ void speedOfWeightChange(double& speedOfWeight,const unsigned goal, bool& exit, 
 		}
 		if (input == "1" || input == "1 kg") {
 			speedOfWeight = VERY_HIGH_SPEEDTOWEIGHT;
+			return;
+		}
+		failedInput();
+	} while (true);
+}
+void goalInputGeneralScreen(unsigned* goal,double* speedToWeight, bool& exit, bool& logout) {
+	menuSeparator();
+	std::string input;
+	do {
+		std::cout << "What is your goal?(lose weight, keep weight, gain weight):" << std::endl;
+		std::getline(std::cin, input);
+		if (logoutOrExitCheck(input, exit, logout)) return;
+		if (input == "lose weight" || input == "Lose weight") {
+			*goal = LOSE_WEIGHT;
+			return;
+		}
+		if (input == "keep weight" || input == "Keep weight") {
+			*goal = KEEP_WEIGHT;
+			*speedToWeight = 0.0;
+			return;
+		}
+		if (input == "gain weight" || input == "Gain weight") {
+			*goal = GAIN_WEIGHT;
 			return;
 		}
 		failedInput();
