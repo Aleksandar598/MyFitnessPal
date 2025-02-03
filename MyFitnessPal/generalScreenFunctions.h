@@ -1,3 +1,4 @@
+#include "player.h"
 #pragma once
 void generalScreenNextAction(const std::string name,const std::string password, unsigned* unsignedDataArray[], double* doubleDataArray[], bool* boolDataArray[], unsigned& caloriesIntake, unsigned& caloriesUsed, int& dailyCalorieBalance,unsigned& recommendedCalories, unsigned& age, unsigned& height, unsigned& goal, double& speedOfWeight, double& weight, double& activityLevel, bool& gender, bool& isPremium, bool& exit, bool& logout, bool& reloadCalories) {
 	std::string input;
@@ -230,6 +231,10 @@ void changeDataForToday(const std::string name, bool& exit, bool& logout) {
 	std::cout << "Press anything to continue." << std::endl;
 	std::getline(std::cin, date);
 }
+void ChoicePosInVector(size_t& choice)
+{
+	choice = choice * 2 - 2;
+}
 std::vector<std::string> vectorDataModify(std::vector<std::string> dailyInfo,bool& deletion, bool& exit, bool& logout) {
 	std::string input;
 	size_t choice = 0;
@@ -248,7 +253,7 @@ std::vector<std::string> vectorDataModify(std::vector<std::string> dailyInfo,boo
 			fail = true;
 		}
 	} while (fail);
-	choice = choice * 2 - 2; // this way we will modify the data from the string
+	ChoicePosInVector(choice);
 	do {
 		fail = true;
 		std::cout << "Would you like to delete the meal/workout?" << std::endl;
