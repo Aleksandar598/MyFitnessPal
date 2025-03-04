@@ -1,3 +1,13 @@
+/*
+Soltuion to course project #9
+Introduction to proramming course
+Faculty of Matematics and Informatics of Sofia University
+Winter semester 2024/2025
+
+@ Aleksandar Angelov
+@ GCC
+File declares functions
+*/
 void menuSeparator();
 bool logoutOrExitCheck(std::string input, bool& exit, bool& logout);
 void failedInput();
@@ -54,3 +64,4 @@ void speedOfWeightChange(double& speedOfWeight, const unsigned goal, bool& exit,
 void howToUse(bool& exit, bool& logout);
 void goalInputGeneralScreen(unsigned* goal, double* speedToWeight, bool& exit, bool& logout);
 void ChoicePosInVector(size_t& choice);
+bool doesStrinConatinDots(std::string str);

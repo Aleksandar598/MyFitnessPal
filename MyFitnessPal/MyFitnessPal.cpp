@@ -1,3 +1,13 @@
+/*
+Soltuion to course project #9
+Introduction to proramming course
+Faculty of Matematics and Informatics of Sofia University
+Winter semester 2024/2025
+
+@ Aleksandar Angelov
+@ GCC
+File contains the flow of the program
+*/
 #include <iostream>
 #include <string>
 #include <fstream>

@@ -1,3 +1,13 @@
+/*
+Soltuion to course project #9
+Introduction to proramming course
+Faculty of Matematics and Informatics of Sofia University
+Winter semester 2024/2025
+
+@ Aleksandar Angelov
+@ GCC
+File defines constants
+*/
 const unsigned NUM_OF_DOUBLE_DATA = 3;
 const unsigned NUM_OF_UNSIGNED_DATA = 3;
 const unsigned NUM_OF_BOOL_DATA = 2;

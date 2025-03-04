@@ -1,5 +1,15 @@
 #include "player.h"
 #pragma once
+/*
+Soltuion to course project #9
+Introduction to proramming course
+Faculty of Matematics and Informatics of Sofia University
+Winter semester 2024/2025
+
+@ Aleksandar Angelov
+@ GCC
+File contains fucntions used in main screen
+*/
 void generalScreenNextAction(const std::string name,const std::string password, unsigned* unsignedDataArray[], double* doubleDataArray[], bool* boolDataArray[], unsigned& caloriesIntake, unsigned& caloriesUsed, int& dailyCalorieBalance,unsigned& recommendedCalories, unsigned& age, unsigned& height, unsigned& goal, double& speedOfWeight, double& weight, double& activityLevel, bool& gender, bool& isPremium, bool& exit, bool& logout, bool& reloadCalories) {
 	std::string input;
 	do {
@@ -123,10 +133,12 @@ void addMeal(const std::string name,bool& exit,bool&logout) {
 	std::string input;
 	std::string mealName;
 	unsigned calories = 0;
-	std::cout << "Please enter the name of the meal:" << std::endl;
-	std::getline(std::cin, mealName);
-	if (exit || logout) return;
-	if (logoutOrExitCheck(mealName, exit, logout)) return;
+	do {
+		std::cout << "Please enter the name of the meal:" << std::endl;
+		std::getline(std::cin, mealName);
+		if (exit || logout) return;
+		if (logoutOrExitCheck(mealName, exit, logout)) return;
+	} while (doesStrinConatinDots(mealName));
 	do {
 		std::cout << "Please enter the amount of calories in the meal:" << std::endl;
 		std::getline(std::cin, input);
@@ -141,10 +153,12 @@ void addWorkout(const std::string name, bool& exit, bool& logout) {
 	std::string input;
 	std::string workoutName;
 	unsigned calories = 0;
-	std::cout << "Please enter the name of the workout:" << std::endl;
-	std::getline(std::cin, workoutName);
-	if (exit || logout) return;
-	if (logoutOrExitCheck(workoutName, exit, logout)) return;
+	do {
+		std::cout << "Please enter the name of the workout:" << std::endl;
+		std::getline(std::cin, workoutName);
+		if (exit || logout) return;
+		if (logoutOrExitCheck(workoutName, exit, logout)) return;
+	} while (doesStrinConatinDots(workoutName));
 	do {
 		std::cout << "Please enter the amount of calories used in the workout:" << std::endl;
 		std::getline(std::cin, input);
