@@ -1,4 +1,14 @@
 #pragma once
+/*
+Soltuion to course project #9
+Introduction to proramming course
+Faculty of Matematics and Informatics of Sofia University
+Winter semester 2024/2025
+
+@ Aleksandar Angelov
+@ GCC
+File contains functions that are use files
+*/
 void doesProfileExistReg(std::string& name, bool& exit, bool& logout) { //the idea between those 2 separate functions is so files are not opened multiple times
 	std::ifstream allProfilesFile(ALLPROFILES);
 	if (!allProfilesFile.is_open()) {
@@ -239,9 +249,18 @@ void saveModifiedInfoForToday(const std::string name, std::vector<std::string> d
 		}
 		copy += read + DELIMITER;
 	}
-	if (deletion || dailyInfo.size() == 0) {
+	if (dailyInfo.size() == 0) {
 		std::ofstream dateFileWrite(name + DATEFILE + TXT);
 		dateFileWrite << copy;
+		dateFileWrite.close();
+		return;
+	}
+	if (deletion) {
+		std::ofstream dateFileWrite(name + DATEFILE + TXT);
+		dateFileWrite << copy;
+		for (int i = 0;i < sizeof(dailyInfo);i++) {
+			dateFileWrite << dailyInfo[i] + DELIMITER;
+		}
 		dateFileWrite.close();
 		return;
 	}

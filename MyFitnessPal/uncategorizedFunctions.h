@@ -1,4 +1,14 @@
 #pragma once
+/*
+Soltuion to course project #9
+Introduction to proramming course
+Faculty of Matematics and Informatics of Sofia University
+Winter semester 2024/2025
+
+@ Aleksandar Angelov
+@ GCC
+File has uncategorized functions
+*/
 void menuSeparator() {
 	std::cout << "==================" << std::endl;
 }
@@ -104,9 +114,19 @@ void howToUse(bool& exit,bool& logout ) {
 	std::string input;
 	std::cout << "Basic commands:" << std::endl;
 	std::cout << "exit - ends the program and logs out the user if logged in" << std::endl;
-	std::cout << "logout - logs out the user and returns him to thestarting menu" << std::endl;
+	std::cout << "logout - logs out the user and returns him to the starting menu" << std::endl;
 	std::cout << "These are the only two commands that you can always type to activate" << std::endl;
 	std::cout << "Enjoy using MyFitnessPal! Press anything to return" << std::endl;
 	std::getline(std::cin, input);
 	logoutOrExitCheck(input, exit, logout);
+}
+bool doesStrinConatinDots(std::string str) {
+	int i = 0;
+	while (str[i]) {
+		if (str[i] == ':') {
+			std::cout << "Input cannot contain ':'" << std::endl;
+			return true;
+		}
+	}
+	return false;
 }

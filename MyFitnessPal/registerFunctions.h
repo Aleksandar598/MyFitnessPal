@@ -1,4 +1,14 @@
 #pragma once
+/*
+Soltuion to course project #9
+Introduction to proramming course
+Faculty of Matematics and Informatics of Sofia University
+Winter semester 2024/2025
+
+@ Aleksandar Angelov
+@ GCC
+File contains functions used in registering
+*/
 void nameInput(std::string& name, bool& exit, bool& logout) {
 	bool nameCheck = false;
 	std::string input;
@@ -24,10 +34,12 @@ void passwordInput(std::string& password, bool& exit, bool& logout) {
 	std::string input;
 	menuSeparator();
 	do {
-		std::cout << "Please enter a password you will use:" << std::endl;
-		std::getline(std::cin, input);
-		if (logoutOrExitCheck(input, exit, logout)) return;
-		password = input;
+		do {
+			std::cout << "Please enter a password you will use:" << std::endl;
+			std::getline(std::cin, input);
+			if (logoutOrExitCheck(input, exit, logout)) return;
+			password = input;
+		} while (doesStrinConatinDots(input));
 		std::cout << "Please enter password again to confirm: " << std::endl;
 		std::getline(std::cin, input);
 		if (logoutOrExitCheck(input, exit, logout)) return;
