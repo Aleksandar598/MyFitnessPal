@@ -23,6 +23,8 @@ enum class Goal{
 
 class User {
   std::string name;
+  std::string password;
+  static size_t ID;
 
   size_t age = 0;
   size_t weight = 0;
@@ -35,11 +37,14 @@ class User {
   Gender gender = Gender::male;
 
 public:
+
+  User();
   const std::string& getName() const;
 
   size_t getWeight() const;
   size_t getHeight() const;
   size_t getAge() const;
+  size_t getID() const;
 
   bool isPremium() const;
 
@@ -47,6 +52,7 @@ public:
   const ActivityLevel& getActivityLevel() const;
   const Goal& getGoal() const;
 
+  bool isPasswordCorrect(const std::string& password) const;
   std::ofstream& serialize(std::ofstream& os) const;
-  std::ifstream& deserialize(std::ifstream& is);
+  std::ifstream& deserialize(std::ifstream& ifs);
 };
